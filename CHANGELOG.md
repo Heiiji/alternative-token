@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format is loosely b
 
 ## [Unreleased]
 
+## [0.1.1] — 2026-11-11
+
+### Changed
+- The repository moved to `github.com/Heiiji/alternative-token`, matching the package id.
+  Manifest, download, README and issue links point to the new address (the old one still
+  redirects). No code change.
+
 ## [0.1.0] — 2026-11-11
 
 ### Changed
@@ -117,11 +124,12 @@ All notable changes to this project are documented here. The format is loosely b
   multi-GM authority election, per-actor request queue, best-effort rollback, standard and
   Dynamic Token Ring art modes, `createToken` reconciliation, and EN + FR localization.
 
-[Unreleased]: https://github.com/Heiiji/alternative-token-foundry/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/Heiiji/alternative-token-foundry/releases/tag/v0.1.0
-[0.0.6]: https://github.com/Heiiji/alternative-token-foundry/releases/tag/v0.0.6
-[0.0.5]: https://github.com/Heiiji/alternative-token-foundry/releases/tag/v0.0.5
-[0.0.4]: https://github.com/Heiiji/alternative-token-foundry/releases/tag/v0.0.4
-[0.0.3]: https://github.com/Heiiji/alternative-token-foundry/releases/tag/v0.0.3
-[0.0.2]: https://github.com/Heiiji/alternative-token-foundry/releases/tag/v0.0.2
-[0.0.1]: https://github.com/Heiiji/alternative-token-foundry/releases/tag/v0.0.1
+[Unreleased]: https://github.com/Heiiji/alternative-token/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Heiiji/alternative-token/releases/tag/v0.1.1
+[0.1.0]: https://github.com/Heiiji/alternative-token/releases/tag/v0.1.0
+[0.0.6]: https://github.com/Heiiji/alternative-token/releases/tag/v0.0.6
+[0.0.5]: https://github.com/Heiiji/alternative-token/releases/tag/v0.0.5
+[0.0.4]: https://github.com/Heiiji/alternative-token/releases/tag/v0.0.4
+[0.0.3]: https://github.com/Heiiji/alternative-token/releases/tag/v0.0.3
+[0.0.2]: https://github.com/Heiiji/alternative-token/releases/tag/v0.0.2
+[0.0.1]: https://github.com/Heiiji/alternative-token/releases/tag/v0.0.1

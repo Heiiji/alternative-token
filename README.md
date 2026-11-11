@@ -1,8 +1,8 @@
 # Alternative Token
 
-[![Release](https://img.shields.io/github/v/release/Heiiji/alternative-token-foundry?sort=semver)](https://github.com/Heiiji/alternative-token-foundry/releases)
+[![Release](https://img.shields.io/github/v/release/Heiiji/alternative-token?sort=semver)](https://github.com/Heiiji/alternative-token/releases)
 [![Foundry](https://img.shields.io/badge/Foundry-v13%E2%80%93v14-informational)](https://foundryvtt.com)
-[![License: MIT](https://img.shields.io/github/license/Heiiji/alternative-token-foundry)](LICENSE)
+[![License: MIT](https://img.shields.io/github/license/Heiiji/alternative-token)](LICENSE)
 
 A small, system-agnostic **Foundry VTT** module (V13+, verified on **V14**) that lets
 **players** switch their character token between **two GM-approved appearances** — for
@@ -27,7 +27,7 @@ two images the GM configured** — a player's request never carries a file path.
 In Foundry: **Add-on Modules → Install Module**, and paste this manifest URL:
 
 ```
-https://github.com/Heiiji/alternative-token-foundry/releases/latest/download/module.json
+https://github.com/Heiiji/alternative-token/releases/latest/download/module.json
 ```
 
 Then enable **Alternative Token** in your world.
