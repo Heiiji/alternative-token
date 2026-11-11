@@ -10,18 +10,19 @@
 import { SLOTS, t } from "./constants.mjs";
 
 /**
+ * Ask for slot A or B.
  * @param {object} config  the actor's configuration
- * @returns {Promise<"a"|"b"|null>}
+ * @param {{title:string, icon:string, content:string, label:(slotLabel:string)=>string}} ui
+ * @returns {Promise<"a"|"b"|null>}  null when dismissed
  */
-export async function promptSlotChoice(config) {
-  const DialogV2 = foundry.applications.api.DialogV2;
+async function promptSlot(config, { title, icon, content, label }) {
   try {
-    const choice = await DialogV2.wait({
-      window: { title: t("ATF.dialog.outOfSyncTitle"), icon: "fa-solid fa-masks-theater" },
-      content: `<p>${t("ATF.dialog.outOfSyncContent")}</p>`,
+    const choice = await foundry.applications.api.DialogV2.wait({
+      window: { title: t(title), icon },
+      content: `<p>${t(content)}</p>`,
       buttons: [
-        { action: SLOTS.A, label: config.a?.label || "A", default: true },
-        { action: SLOTS.B, label: config.b?.label || "B" },
+        { action: SLOTS.A, label: label(config.a?.label || "A"), default: true },
+        { action: SLOTS.B, label: label(config.b?.label || "B") },
       ],
       rejectClose: false,
     });
@@ -31,29 +32,22 @@ export async function promptSlotChoice(config) {
   }
 }
 
-/**
- * GM-only: assign the currently showing (unrecognized) art to slot A or B.
- * @param {object} config
- * @returns {Promise<"a"|"b"|null>}
- */
-export async function promptAdoptSlot(config) {
-  const DialogV2 = foundry.applications.api.DialogV2;
-  try {
-    const choice = await DialogV2.wait({
-      window: { title: t("ATF.dialog.adoptTitle"), icon: "fa-solid fa-user-circle" },
-      content: `<p>${t("ATF.dialog.adoptContent")}</p>`,
-      buttons: [
-        {
-          action: SLOTS.A,
-          label: t("ATF.dialog.adoptAs", { label: config.a?.label || "A" }),
-          default: true,
-        },
-        { action: SLOTS.B, label: t("ATF.dialog.adoptAs", { label: config.b?.label || "B" }) },
-      ],
-      rejectClose: false,
-    });
-    return choice === SLOTS.A || choice === SLOTS.B ? choice : null;
-  } catch {
-    return null;
-  }
+/** Player (or any non-GM owner): pick which approved appearance to revert to. */
+export function promptSlotChoice(config) {
+  return promptSlot(config, {
+    title: "ATF.dialog.outOfSyncTitle",
+    icon: "fa-solid fa-masks-theater",
+    content: "ATF.dialog.outOfSyncContent",
+    label: (slotLabel) => slotLabel,
+  });
+}
+
+/** GM-only: assign the currently showing (unrecognized) art to slot A or B. */
+export function promptAdoptSlot(config) {
+  return promptSlot(config, {
+    title: "ATF.dialog.adoptTitle",
+    icon: "fa-solid fa-user-circle",
+    content: "ATF.dialog.adoptContent",
+    label: (slotLabel) => t("ATF.dialog.adoptAs", { label: slotLabel }),
+  });
 }

@@ -1,5 +1,5 @@
 {
-  "name": "alternative-token-foundry",
+  "name": "alternative-token",
   "private": true,
   "type": "module",
   "description": "Foundry VTT module: switch a character token between two GM-approved appearances.",

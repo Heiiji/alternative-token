@@ -1,5 +1,5 @@
 /**
- * Alternative Token Foundry — entry point.
+ * Alternative Token — entry point.
  *
  * Lets players switch their linked character token between two GM-approved
  * appearances with one click, keeping every linked token and the prototype token
@@ -8,7 +8,7 @@
 
 import { FLAGS, INTERNAL_OPTION, MODULE_ID, log } from "./constants.mjs";
 import { registerSettings } from "./settings.mjs";
-import { getActorConfig } from "./config-repository.mjs";
+import { getActorConfig, removeActorConfig } from "./config-repository.mjs";
 import { isPrimaryActiveGM } from "./authority.mjs";
 import { onRenderTokenHUD } from "./hud-controller.mjs";
 import { reconcileToken, synchronizeAppearance } from "./sync-service.mjs";
@@ -63,13 +63,16 @@ Hooks.on("updateActor", (actor, changed, options, userId) => {
 
   if (options?.[INTERNAL_OPTION]) return;
 
+  // `changed` is a diff (keys equal to the previous value are omitted), so it only
+  // tells us *that* a flag changed: the value is read from the document.
+  const flagsChanged = changed?.flags?.[MODULE_ID];
+  if (!flagsChanged) return;
+
   // GM side: a player wrote a request flag.
-  const request = foundry.utils.getProperty(changed, `flags.${MODULE_ID}.${FLAGS.REQUEST}`);
-  if (request) handleRelayedRequest(actor, request, userId);
+  if (flagsChanged[FLAGS.REQUEST]) handleRelayedRequest(actor, actor.getFlag(MODULE_ID, FLAGS.REQUEST), userId);
 
   // Any client: show the requesting user their result.
-  const result = foundry.utils.getProperty(changed, `flags.${MODULE_ID}.${FLAGS.LAST_RESULT}`);
-  if (result) notifyRequester(result);
+  if (flagsChanged[FLAGS.LAST_RESULT]) notifyRequester(actor.getFlag(MODULE_ID, FLAGS.LAST_RESULT));
 });
 
 Hooks.on("updateToken", (tokenDoc, changed) => {
@@ -81,6 +84,12 @@ Hooks.on("createToken", (tokenDoc, options) => {
   if (options?.[INTERNAL_OPTION]) return;
   if (!isPrimaryActiveGM()) return;
   reconcileToken(tokenDoc).catch((err) => console.error(`${MODULE_ID} |`, err));
+});
+
+Hooks.on("deleteActor", (actor) => {
+  // Drop the config of a deleted world actor so the setting keeps no orphan entries.
+  if (actor.pack || actor.isToken || !isPrimaryActiveGM()) return;
+  removeActorConfig(actor.id).catch((err) => console.error(`${MODULE_ID} |`, err));
 });
 
 Hooks.on("userConnected", () => {

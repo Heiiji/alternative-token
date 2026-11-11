@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isOwnUnlinkedToken, validateActorConfig, validateSwitchRequest } from "../scripts/validation.mjs";
+import { isOwnUnlinkedToken, isStale, validateActorConfig, validateSwitchRequest } from "../scripts/validation.mjs";
 
 describe("validateActorConfig", () => {
   const valid = {
@@ -83,5 +83,16 @@ describe("isOwnUnlinkedToken", () => {
     expect(isOwnUnlinkedToken({ ...token, isLinked: true }, "actor-1")).toBe(false);
     expect(isOwnUnlinkedToken({ ...token, documentName: "Actor" }, "actor-1")).toBe(false);
     expect(isOwnUnlinkedToken(null, "actor-1")).toBe(false);
+  });
+});
+
+describe("isStale", () => {
+  it("accepts a fresh request and rejects an old one", () => {
+    expect(isStale(1000, 1500, 15000)).toBe(false);
+    expect(isStale(1000, 17000, 15000)).toBe(true);
+  });
+
+  it("rejects a request stamped before a server restart (clock went back)", () => {
+    expect(isStale(3_600_000, 2000, 15000)).toBe(true);
   });
 });

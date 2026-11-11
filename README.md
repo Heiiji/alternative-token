@@ -1,4 +1,4 @@
-# Alternative Token Foundry
+# Alternative Token
 
 [![Release](https://img.shields.io/github/v/release/Heiiji/alternative-token-foundry?sort=semver)](https://github.com/Heiiji/alternative-token-foundry/releases)
 [![Foundry](https://img.shields.io/badge/Foundry-v13%E2%80%93v14-informational)](https://foundryvtt.com)
@@ -14,6 +14,12 @@ Switching an **unlinked** token changes just that placed token, since each unlin
 independent. The GM keeps full control either way: the switch only ever applies one of **the
 two images the GM configured** — a player's request never carries a file path.
 
+| Normal | One click later |
+|---|---|
+| ![Token HUD with the switch button](docs/screenshots/hud-normal.jpg) | ![Every linked token switched](docs/screenshots/hud-armored.jpg) |
+
+![GM configuration window](docs/screenshots/config.jpg)
+
 ---
 
 ## Install
@@ -24,7 +30,7 @@ In Foundry: **Add-on Modules → Install Module**, and paste this manifest URL:
 https://github.com/Heiiji/alternative-token-foundry/releases/latest/download/module.json
 ```
 
-Then enable **Alternative Token Foundry** in your world.
+Then enable **Alternative Token** in your world.
 
 ## GM setup
 
@@ -40,7 +46,7 @@ now* pushes an appearance immediately; **Save changes** when done.
 
 Both images are required, must differ, and both need a label before saving.
 
-**Transition:** in **Configure Settings → Alternative Token Foundry**, pick the visual
+**Transition:** in **Configure Settings → Alternative Token**, pick the visual
 effect used when a token switches (default **Fade**). The list is Foundry's built-in
 texture transitions (swirl, hologram, morph, and the rest).
 
@@ -90,10 +96,10 @@ warning.
 
 ## Public API
 
-Available from the `ready` hook (or `Hooks.once("alternative-token-foundry.ready", (api) => …)`):
+Available from the `ready` hook (or `Hooks.once("alternative-token.ready", (api) => …)`):
 
 ```js
-const api = game.modules.get("alternative-token-foundry")?.api;
+const api = game.modules.get("alternative-token")?.api;
 
 // Request slot "a" or "b" for an actor the current user owns. Goes through the same
 // validation as the HUD button. Pass a token uuid to switch one unlinked token only.
@@ -132,7 +138,7 @@ images définies par le MJ**, jamais vers un fichier arbitraire.
 
 - **Installation** : Modules → Installer un module, coller l'URL de manifeste ci-dessus.
 - **MJ** : *Configurer les paramètres → Images de jeton alternatives* (réservé au MJ). Sous
-  *Alternative Token Foundry*, choisir la **transition d'apparence** (fondu par défaut).
+  *Alternative Token*, choisir la **transition d'apparence** (fondu par défaut).
   Si **Tokenizer** est actif, chaque emplacement a un bouton **Tokeniser…**.
 - **Joueur** : clic droit sur le jeton → bouton masques du HUD.
 

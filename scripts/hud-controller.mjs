@@ -84,11 +84,19 @@ export function onRenderTokenHUD(hud, element) {
   });
 }
 
+/** A Token HUD control shaped like core's own (`button.control-icon`). */
+function hudButton(cssClass, iconClass, tooltip) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.classList.add("control-icon", cssClass);
+  button.innerHTML = `<i class="${iconClass} fa-fw" inert></i>`;
+  button.dataset.tooltip = tooltip;
+  button.ariaLabel = tooltip;
+  return button;
+}
+
 function buildEditButton(actorId) {
-  const button = document.createElement("div");
-  button.classList.add("control-icon", "atf-edit");
-  button.innerHTML = `<i class="fa-solid fa-pen-to-square fa-fw"></i>`;
-  button.dataset.tooltip = t("ATF.hud.editImages");
+  const button = hudButton("atf-edit", "fa-solid fa-pen-to-square", t("ATF.hud.editImages"));
   button.addEventListener("click", (event) => {
     event.preventDefault();
     AtfConfigApp.openForActor(actorId);
@@ -97,28 +105,19 @@ function buildEditButton(actorId) {
 }
 
 function buildButton(config, active, target) {
-  const button = document.createElement("div");
-  button.classList.add("control-icon", "atf-switch");
-
   const noGM = getPrimaryActiveGMId() == null;
-  let iconClass = "fa-solid fa-masks-theater";
   let tooltip;
+  if (noGM) tooltip = t("ATF.hud.noGM");
+  else if (active) tooltip = t("ATF.hud.switchTo", { label: config[target].label });
+  else tooltip = game.user.isGM ? t("ATF.hud.outOfSyncGm") : t("ATF.hud.outOfSync");
 
-  if (!active) {
-    iconClass = "fa-solid fa-triangle-exclamation";
-    button.classList.add("atf-warn");
-    tooltip = game.user.isGM ? t("ATF.hud.outOfSyncGm") : t("ATF.hud.outOfSync");
-  } else {
-    tooltip = t("ATF.hud.switchTo", { label: config[target].label });
-  }
-
-  if (noGM) {
-    button.classList.add("atf-disabled");
-    tooltip = t("ATF.hud.noGM");
-  }
-
-  button.innerHTML = `<i class="${iconClass} fa-fw"></i>`;
-  button.dataset.tooltip = tooltip;
+  const button = hudButton(
+    "atf-switch",
+    active ? "fa-solid fa-masks-theater" : "fa-solid fa-triangle-exclamation",
+    tooltip,
+  );
+  if (!active) button.classList.add("atf-warn");
+  if (noGM) button.classList.add("atf-disabled");
   return button;
 }
 

@@ -6,6 +6,18 @@ All notable changes to this project are documented here. The format is loosely b
 
 ## [Unreleased]
 
+## [0.1.0] — 2026-11-11
+
+### Changed
+- **Renamed** to **Alternative Token** (package id `alternative-token`, was
+  `alternative-token-foundry`) ahead of the official package listing. Settings and flags are
+  namespaced by id, so a world configured with a 0.0.x build must be configured again. The
+  API is now `game.modules.get("alternative-token").api` and the hook `alternative-token.ready`.
+- The GM answers a relayed request with one actor update instead of two.
+- The configuration of a deleted actor is removed from the world setting.
+- Releases run the test suite before publishing. Dev tooling updated (vitest 5).
+- README documents the whole public API.
+
 ### Security
 - A switch request could name **any** unlinked token through its `tokenUuid`, so a player
   owning one configured character could have the GM client repaint another actor's unlinked
@@ -20,10 +32,14 @@ All notable changes to this project are documented here. The format is loosely b
 - A player's HUD button kept its old "Switch to …" tooltip after switching a linked token;
   the HUD now also refreshes when the prototype token changes.
 - Picking an image after the config window re-rendered no longer drops the chosen path.
-
-### Changed
-- Releases run the test suite before publishing. Dev tooling updated (vitest 5).
-- README documents the whole public API.
+- **Players only got the "Appearance switched" notification for their first switch.** The
+  result was read from the update diff, which omits unchanged keys (such as the requester
+  id) from the second result on; it is now read from the actor.
+- A pending request written before a server restart is discarded instead of being applied
+  when the GM reconnects.
+- Token HUD controls are real `<button>` elements like core's (keyboard focus, screen
+  readers), and the configuration window is readable in the dark theme (borders, *Remove*
+  button, empty image slot).
 
 ## [0.0.6] — 2026-08-18
 
@@ -101,7 +117,8 @@ All notable changes to this project are documented here. The format is loosely b
   multi-GM authority election, per-actor request queue, best-effort rollback, standard and
   Dynamic Token Ring art modes, `createToken` reconciliation, and EN + FR localization.
 
-[Unreleased]: https://github.com/Heiiji/alternative-token-foundry/compare/v0.0.6...HEAD
+[Unreleased]: https://github.com/Heiiji/alternative-token-foundry/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Heiiji/alternative-token-foundry/releases/tag/v0.1.0
 [0.0.6]: https://github.com/Heiiji/alternative-token-foundry/releases/tag/v0.0.6
 [0.0.5]: https://github.com/Heiiji/alternative-token-foundry/releases/tag/v0.0.5
 [0.0.4]: https://github.com/Heiiji/alternative-token-foundry/releases/tag/v0.0.4

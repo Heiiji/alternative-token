@@ -6,7 +6,7 @@
  * stays unit-testable under Node/vitest.
  */
 
-export const MODULE_ID = "alternative-token-foundry";
+export const MODULE_ID = "alternative-token";
 
 /** World-setting keys. */
 export const SETTINGS = {

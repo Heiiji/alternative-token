@@ -33,13 +33,7 @@ export function buildPrototypeUpdate(artMode, src) {
  * @returns {Map<string, object[]>}  sceneId -> token update objects
  */
 export function planSceneUpdates(tokens, artMode, src) {
-  const bySceneId = new Map();
-  for (const tk of tokens ?? []) {
-    if (!tk || tk.sceneId == null) continue;
-    if (!bySceneId.has(tk.sceneId)) bySceneId.set(tk.sceneId, []);
-    bySceneId.get(tk.sceneId).push(buildTokenUpdate(tk.id, artMode, src));
-  }
-  return bySceneId;
+  return planRollback((tokens ?? []).map((tk) => tk && { ...tk, src }), artMode);
 }
 
 /**

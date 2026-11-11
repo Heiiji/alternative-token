@@ -1,4 +1,4 @@
-# Alternative Token Foundry — Design Spec
+# Alternative Token — Design Spec
 
 **Date:** 2026-07-14
 **Status:** Approved
@@ -44,7 +44,7 @@ The "no arbitrary image paths" guarantee comes from **where each piece of data l
 |---|---|---|---|
 | **Config** | World setting `actorConfigurations` (`config:false`) | **GM only** | per actor: `enabled`, `artMode`, `a{label,src}`, `b{label,src}` |
 | **Request** | Actor flag `flags.<id>.request` | Actor owner (player) | `{id, target:"a"|"b", tokenUuid, requestedAt, requesterId}` — **never a path** |
-| **Result** | Actor flag `flags.<id>.lastResult` | GM (authoritative) | `{requestId, success, message?, completedAt}` — feedback only |
+| **Result** | Actor flag `flags.<id>.lastResult` | GM (authoritative) | `{requestId, requesterId, success, message, completedAt}` — feedback only; written together with `request: null` |
 
 A player owns their Actor, so they *can* write the request flag — but the only thing it can
 carry is a slot letter (`"a"`/`"b"`). The GM resolves that letter to an actual image from
@@ -174,13 +174,14 @@ labels are non-empty.
 ## 9. V14 API notes (verified)
 
 - `renderTokenHUD(hud, element, ...)` — `element` is a **native `HTMLElement`** (no jQuery);
-  inject `div.control-icon` into `.col.left`/`.col.right`.
+  inject `button.control-icon` (same markup as core's) into `.col.left`/`.col.right`.
 - Config screen: `foundry.applications.api.HandlebarsApplicationMixin(ApplicationV2)`
   (`FormApplication` deprecated).
 - File Picker: `foundry.applications.apps.FilePicker.implementation` (bare global removed).
 - `Actor#getDependentTokens({ linked, scenes })` → `TokenDocument[]`.
-- `updateActor(document, changed, options, userId)` — flag diffs appear in `changed`;
-  custom `options` keys delivered to hooks; `userId` server-supplied.
+- `updateActor(document, changed, options, userId)` — `changed` is a **diff** (unchanged
+  keys are omitted), so it only signals that a flag changed; values are read with `getFlag`.
+  Custom `options` keys are delivered to hooks; `userId` is server-supplied.
 - Field paths: `prototypeToken.texture.src`, `prototypeToken.ring.subject.texture`;
   on placed token `ring.subject.texture`, `ring.enabled`.
 - `DialogV2`, `testUserPermission(user, CONST.DOCUMENT_OWNERSHIP_LEVELS.OWNER)`,
@@ -191,7 +192,7 @@ labels are non-empty.
 ## 10. Repo layout
 
 ```
-alternative-token-foundry/
+alternative-token/
 ├── module.json                    # compatibility {minimum:"13", verified:"14"}
 ├── scripts/
 │   ├── main.mjs                   # hook wiring
@@ -211,7 +212,7 @@ alternative-token-foundry/
 │   ├── request-service.mjs        # player request + GM processing + per-actor queue
 │   └── sync-service.mjs           # synchronizeAppearance + rollback
 ├── templates/config.hbs
-├── styles/alternative-token-foundry.css
+├── styles/alternative-token.css
 ├── lang/en.json, lang/fr.json
 ├── tests/*.test.mjs               # vitest on pure logic
 ├── .github/workflows/release.yml  # tag vX.Y.Z → build zip → GitHub Release

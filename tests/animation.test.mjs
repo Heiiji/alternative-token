@@ -78,7 +78,7 @@ describe("appearanceUpdateOptions", () => {
     globalThis.game = {
       settings: {
         get(namespace, key) {
-          expect(namespace).toBe("alternative-token-foundry");
+          expect(namespace).toBe("alternative-token");
           expect(key).toBe("appearanceTransition");
           return "swirl";
         },

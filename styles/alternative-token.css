@@ -40,7 +40,7 @@
   overflow-y: auto;
 }
 .atf-config .atf-actor {
-  border: 1px solid var(--color-border-light-tertiary, #782e22);
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
   border-radius: 6px;
   padding: 0.5rem 0.75rem 0.75rem;
 }
@@ -78,7 +78,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  border: 1px dashed rgba(0, 0, 0, 0.2);
+  border: 1px dashed color-mix(in srgb, currentColor 25%, transparent);
   border-radius: 4px;
   padding: 0.5rem;
 }
@@ -90,9 +90,14 @@
   width: 100%;
   height: 96px;
   object-fit: contain;
-  background: rgba(0, 0, 0, 0.15);
+  background: color-mix(in srgb, currentColor 8%, transparent);
   border: none;
   border-radius: 4px;
+}
+/* Empty slot: keep the box, hide the browser's broken-image frame. */
+.atf-config .atf-preview[src=""],
+.atf-config .atf-preview:not([src]) {
+  visibility: hidden;
 }
 .atf-config .atf-path-row {
   display: flex;
@@ -118,13 +123,14 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
+  white-space: nowrap;
 }
 .atf-config .atf-actor-actions {
   display: flex;
   gap: 0.35rem;
 }
 .atf-config .atf-danger {
-  color: #7a1f1f;
+  color: var(--color-level-error, #c0392b);
 }
 .atf-config .atf-empty {
   text-align: center;
@@ -134,7 +140,7 @@
 .atf-config .atf-footer {
   display: flex;
   justify-content: flex-end;
-  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  border-top: 1px solid color-mix(in srgb, currentColor 20%, transparent);
   padding-top: 0.5rem;
 }
 .atf-config .atf-save {

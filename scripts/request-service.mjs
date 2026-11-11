@@ -10,9 +10,9 @@
  * concurrent / rapid requests can never overlap.
  */
 
-import { FLAGS, MODULE_ID, REQUEST_TTL_MS, t, warn, error } from "./constants.mjs";
+import { FLAGS, MODULE_ID, t, warn, error } from "./constants.mjs";
 import { getActorConfig } from "./config-repository.mjs";
-import { isOwnUnlinkedToken, validateSwitchRequest } from "./validation.mjs";
+import { isOwnUnlinkedToken, isStale, validateSwitchRequest } from "./validation.mjs";
 import { switchSingleToken, synchronizeAppearance } from "./sync-service.mjs";
 import { isPrimaryActiveGM } from "./authority.mjs";
 
@@ -80,8 +80,9 @@ export async function requestAppearanceChange(actor, target, tokenUuid) {
     id: foundry.utils.randomID(),
     target,
     tokenUuid: tokenUuid ?? null,
-    // Server-synced clock: requester and GM are different machines, and plain
-    // Date.now() skew between them would expire every request (or none).
+    // Server clock (ms since server start, synced on every client): requester and
+    // GM are different machines, and plain Date.now() skew between them would
+    // expire every request (or none).
     requestedAt: game.time.serverTime,
     requesterId: game.user.id, // used only for post-handover recovery; re-checked for ownership
   };
@@ -118,7 +119,7 @@ export async function recoverPendingRequests() {
     const request = actor.getFlag(MODULE_ID, FLAGS.REQUEST);
     if (!request) continue;
 
-    if (game.time.serverTime - (request.requestedAt ?? 0) > REQUEST_TTL_MS) {
+    if (isStale(request.requestedAt ?? 0, game.time.serverTime)) {
       await actor.unsetFlag(MODULE_ID, FLAGS.REQUEST).catch(() => {});
       continue;
     }
@@ -179,17 +180,19 @@ function makeResult(request, userId, success, message) {
     requestId: request.id,
     requesterId: request.requesterId ?? userId ?? null,
     success,
-    ...(message ? { message } : {}),
+    message: message ?? null,
     completedAt: Date.now(),
   };
 }
 
 async function writeResultAndClear(actor, request, result) {
-  await actor.setFlag(MODULE_ID, FLAGS.LAST_RESULT, result).catch(() => {});
+  // One update: publish the result and clear the request, unless a newer request
+  // replaced ours meanwhile. `null` (not a deletion key) reads as "no request"
+  // everywhere and avoids the V13/V14 deletion-syntax split.
   const current = actor.getFlag(MODULE_ID, FLAGS.REQUEST);
-  if (!current || current.id === request.id) {
-    await actor.unsetFlag(MODULE_ID, FLAGS.REQUEST).catch(() => {});
-  }
+  const flags = { [FLAGS.LAST_RESULT]: result };
+  if (!current || current.id === request.id) flags[FLAGS.REQUEST] = null;
+  await actor.update({ flags: { [MODULE_ID]: flags } }).catch(() => {});
 }
 
 /**
