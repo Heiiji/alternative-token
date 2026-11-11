@@ -49,3 +49,14 @@ export function validateSwitchRequest({ enabled, ownsActor, target, requestedAt,
   if (!hasImage) return { ok: false, error: "ATF.errors.noImage" };
   return { ok: true };
 }
+
+/**
+ * May a switch request made on `actorId` act on this single placed token?
+ * Only an unlinked token of that same actor: the uuid comes from a player-written
+ * flag, so it must not be able to reach another actor's token.
+ * @param {{documentName?:string, isLinked?:boolean, actorId?:string} | null} token
+ * @param {string} actorId
+ */
+export function isOwnUnlinkedToken(token, actorId) {
+  return token?.documentName === "Token" && token.isLinked === false && token.actorId === actorId;
+}

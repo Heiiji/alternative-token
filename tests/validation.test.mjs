@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateActorConfig, validateSwitchRequest } from "../scripts/validation.mjs";
+import { isOwnUnlinkedToken, validateActorConfig, validateSwitchRequest } from "../scripts/validation.mjs";
 
 describe("validateActorConfig", () => {
   const valid = {
@@ -65,5 +65,23 @@ describe("validateSwitchRequest", () => {
 
   it("rejects a target with no image", () => {
     expect(validateSwitchRequest({ ...base, hasImage: false }).error).toBe("ATF.errors.noImage");
+  });
+});
+
+describe("isOwnUnlinkedToken", () => {
+  const token = { documentName: "Token", isLinked: false, actorId: "actor-1" };
+
+  it("accepts an unlinked token of the requesting actor", () => {
+    expect(isOwnUnlinkedToken(token, "actor-1")).toBe(true);
+  });
+
+  it("rejects another actor's token (forged tokenUuid)", () => {
+    expect(isOwnUnlinkedToken(token, "actor-2")).toBe(false);
+  });
+
+  it("rejects linked tokens, non-token documents and unresolved uuids", () => {
+    expect(isOwnUnlinkedToken({ ...token, isLinked: true }, "actor-1")).toBe(false);
+    expect(isOwnUnlinkedToken({ ...token, documentName: "Actor" }, "actor-1")).toBe(false);
+    expect(isOwnUnlinkedToken(null, "actor-1")).toBe(false);
   });
 });

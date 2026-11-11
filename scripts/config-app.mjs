@@ -10,7 +10,7 @@ import { ART_MODES, MODULE_ID, t, error, withErrorDetail } from "./constants.mjs
 import { getActorConfig, getConfig, removeActorConfig, setActorConfig, setConfig } from "./config-repository.mjs";
 import { validateActorConfig } from "./validation.mjs";
 import { cacheBustPath, normalizePath, samePath } from "./paths.mjs";
-import { currentArtSrc, inferArtMode, resolveActiveSlot } from "./slots.mjs";
+import { currentArtSrc, inferArtMode, otherSlot, resolveActiveSlot } from "./slots.mjs";
 import { synchronizeAppearance } from "./sync-service.mjs";
 import { enqueue } from "./request-service.mjs";
 import { isTokenizerAvailable, launchSlotTokenizer, shouldSyncAfterTokenize } from "./tokenizer-bridge.mjs";
@@ -183,17 +183,12 @@ export class AtfConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static async #onPickImage(_event, target) {
     const { actorId, slot } = target.dataset;
-    const input = this.element.querySelector(`[name="actors.${actorId}.${slot}.src"]`);
-    const preview = this.element.querySelector(`[data-preview="${actorId}.${slot}"]`);
     const FilePicker = foundry.applications.apps.FilePicker.implementation;
     new FilePicker({
       type: "image",
-      current: input?.value || "",
-      callback: (path) => {
-        const src = normalizePath(path);
-        if (input) input.value = src;
-        if (preview) preview.src = src;
-      },
+      current: this.#readRow(actorId)[slot].src,
+      // Fields are looked up at callback time: the form may re-render while the picker is open.
+      callback: (path) => this.#writeSlotSrc(actorId, slot, normalizePath(path)),
     }).render(true);
   }
 
@@ -201,13 +196,8 @@ export class AtfConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const { actorId } = target.dataset;
     const actor = game.actors.get(actorId);
     if (!actor) return;
-    const artMode =
-      this.element.querySelector(`[name="actors.${actorId}.artMode"]`)?.value ?? ART_MODES.STANDARD;
-    const src = normalizePath(currentArtSrc(actor.prototypeToken, artMode) || actor.img || "");
-    const input = this.element.querySelector(`[name="actors.${actorId}.a.src"]`);
-    const preview = this.element.querySelector(`[data-preview="${actorId}.a"]`);
-    if (input) input.value = src;
-    if (preview) preview.src = src;
+    const { artMode } = this.#readRow(actorId);
+    this.#writeSlotSrc(actorId, "a", normalizePath(currentArtSrc(actor.prototypeToken, artMode) || actor.img || ""));
   }
 
   static async #onApplySlot(_event, target) {
@@ -243,13 +233,12 @@ export class AtfConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!actor) return;
 
     const row = this.#readRow(actorId);
-    const other = slot === "a" ? "b" : "a";
     const seedSrc = row[slot]?.src || currentArtSrc(actor.prototypeToken, row.artMode) || "";
     launchSlotTokenizer({
       actor,
       slot,
       seedSrc,
-      otherSlotSrc: row[other]?.src ?? "",
+      otherSlotSrc: row[otherSlot(slot)]?.src ?? "",
       onResult: (parsed) => this.#applyTokenizerResult(actorId, slot, parsed),
     });
   }

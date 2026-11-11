@@ -11,8 +11,8 @@ example *Normal* and *Armored* — with a single click in the Token HUD.
 Switching a **linked** token updates every linked token (across all scenes) and the actor's
 prototype token together, so the appearance belongs to the character and survives reloads.
 Switching an **unlinked** token changes just that placed token, since each unlinked token is
-independent. The GM keeps full control either way: players can only ever switch **between the
-two images the GM configured** — they can never point a token at an arbitrary file.
+independent. The GM keeps full control either way: the switch only ever applies one of **the
+two images the GM configured** — a player's request never carries a file path.
 
 ---
 
@@ -81,21 +81,39 @@ Approved images live in a **GM-only world setting**. A player click writes a tin
 **request flag** (`"a"`/`"b"`) to their owned actor; Foundry delivers it to the elected GM
 with a server-verified user id; the GM validates ownership and applies the GM-approved image
 to all linked tokens + the prototype, with best-effort rollback on failure. Multiple
-connected GMs elect a single authority, and rapid clicks are serialized per actor. No socket,
-no dependencies. Full design in [`docs/DESIGN.md`](docs/DESIGN.md).
+connected GMs share a single authority (Foundry's `game.users.activeGM`), and rapid clicks are
+serialized per actor. No socket, no dependencies. Full design in [`docs/DESIGN.md`](docs/DESIGN.md).
+
+Foundry's own permissions still apply: a player allowed to edit their token with core tools can
+change its art outside ATF. ATF does not block that; the HUD button then shows an out-of-sync
+warning.
 
 ## Public API
 
+Available from the `ready` hook (or `Hooks.once("alternative-token-foundry.ready", (api) => …)`):
+
 ```js
 const api = game.modules.get("alternative-token-foundry")?.api;
-await api.requestAppearanceChange(actor, "b"); // request slot B for an owned actor
+
+// Request slot "a" or "b" for an actor the current user owns. Goes through the same
+// validation as the HUD button. Pass a token uuid to switch one unlinked token only.
+await api.requestAppearanceChange(actor, "b", tokenUuid);
+
+// Read an actor's configuration: { enabled, artMode, a: { label, src }, b: { label, src } } or null.
+api.getActorConfig(actor.id);
+
+// GM only, low-level: apply a slot of a config to all linked tokens + the prototype,
+// without validation or queueing. Prefer requestAppearanceChange.
+await api.synchronizeAppearance(actor, api.getActorConfig(actor.id), "a");
 ```
+
+The module is pre-1.0: this API may still change between minor versions.
 
 ## Development
 
 ```bash
 npm install
-npm test        # vitest — covers the pure logic (paths, slots, validation, election, sync plan, transitions, tokenizer bridge)
+npm test        # vitest — covers the pure logic (paths, slots, validation, sync plan, transitions, tokenizer bridge)
 ```
 
 Release: push a tag `vX.Y.Z`; GitHub Actions builds `module.zip`, stamps `module.json`, and

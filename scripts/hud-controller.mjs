@@ -79,8 +79,8 @@ export function onRenderTokenHUD(hud, element) {
       slot = await promptSlotChoice(liveConfig);
       if (!slot) return;
     }
+    // The HUD refreshes itself from the update hooks in main.mjs.
     await doSwitch(actor, slot, button, tokenDoc.uuid);
-    hud.render?.();
   });
 }
 

@@ -12,7 +12,7 @@
 
 import { FLAGS, MODULE_ID, REQUEST_TTL_MS, t, warn, error } from "./constants.mjs";
 import { getActorConfig } from "./config-repository.mjs";
-import { validateSwitchRequest } from "./validation.mjs";
+import { isOwnUnlinkedToken, validateSwitchRequest } from "./validation.mjs";
 import { switchSingleToken, synchronizeAppearance } from "./sync-service.mjs";
 import { isPrimaryActiveGM } from "./authority.mjs";
 
@@ -80,7 +80,9 @@ export async function requestAppearanceChange(actor, target, tokenUuid) {
     id: foundry.utils.randomID(),
     target,
     tokenUuid: tokenUuid ?? null,
-    requestedAt: Date.now(),
+    // Server-synced clock: requester and GM are different machines, and plain
+    // Date.now() skew between them would expire every request (or none).
+    requestedAt: game.time.serverTime,
     requesterId: game.user.id, // used only for post-handover recovery; re-checked for ownership
   };
 
@@ -116,7 +118,7 @@ export async function recoverPendingRequests() {
     const request = actor.getFlag(MODULE_ID, FLAGS.REQUEST);
     if (!request) continue;
 
-    if (Date.now() - (request.requestedAt ?? 0) > REQUEST_TTL_MS) {
+    if (game.time.serverTime - (request.requestedAt ?? 0) > REQUEST_TTL_MS) {
       await actor.unsetFlag(MODULE_ID, FLAGS.REQUEST).catch(() => {});
       continue;
     }
@@ -141,7 +143,7 @@ async function processRequest(actor, request, userId, { viaRelay }) {
     ownsActor,
     target,
     requestedAt: request.requestedAt,
-    now: Date.now(),
+    now: game.time.serverTime,
     hasImage,
   });
 
@@ -152,7 +154,9 @@ async function processRequest(actor, request, userId, { viaRelay }) {
   } else {
     try {
       const token = await resolveUuid(request.tokenUuid);
-      if (token && token.isLinked === false) {
+      // `tokenUuid` is player-written: only honor it for a token of the actor the
+      // request was (ownership-checked) made on, never another actor's token.
+      if (isOwnUnlinkedToken(token, actor.id)) {
         // Unlinked token: switch just this placed token (per-token semantics).
         await switchSingleToken(token, config, target);
       } else {

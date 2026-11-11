@@ -43,12 +43,14 @@ The "no arbitrary image paths" guarantee comes from **where each piece of data l
 | Store | Location | Who can write | Contents |
 |---|---|---|---|
 | **Config** | World setting `actorConfigurations` (`config:false`) | **GM only** | per actor: `enabled`, `artMode`, `a{label,src}`, `b{label,src}` |
-| **Request** | Actor flag `flags.<id>.request` | Actor owner (player) | `{id, target:"a"|"b", requestedAt}` — **never a path** |
+| **Request** | Actor flag `flags.<id>.request` | Actor owner (player) | `{id, target:"a"|"b", tokenUuid, requestedAt, requesterId}` — **never a path** |
 | **Result** | Actor flag `flags.<id>.lastResult` | GM (authoritative) | `{requestId, success, message?, completedAt}` — feedback only |
 
 A player owns their Actor, so they *can* write the request flag — but the only thing it can
 carry is a slot letter (`"a"`/`"b"`). The GM resolves that letter to an actual image from
-GM-only config. Even a hand-edited flag cannot inject a file path.
+GM-only config. Even a hand-edited flag cannot inject a file path. The optional
+`tokenUuid` it carries is only honored for an unlinked token **of that same actor**, so a
+forged uuid cannot reach another actor's token.
 
 The request flows through the Actor document (not a raw socket) so the GM receives the
 **server-supplied `userId`** of the initiator via the `updateActor` hook — trusted identity
@@ -138,14 +140,15 @@ slot is brought into line.
 
 ## 7. Authority & concurrency
 
-- **Election:** among `game.users` that are `active && isGM`, the lowest `id` wins
-  (deterministic across clients). On `ready`/`userConnected`, the newly elected GM recovers
+- **Election:** Foundry's own `game.users.activeGM` (highest role, then lowest `id`;
+  identical on every client). On `ready`/`userConnected`, the newly elected GM recovers
   any non-expired pending request (survives GM handover).
 - **Per-actor queue:** a promise chain per actor serializes rapid/concurrent clicks so two
   owners of the same actor never produce overlapping updates.
 - **Anti-loop:** all module-originated document updates carry `{ atfInternal:true }` in
   options; the module's own update hooks ignore tagged updates.
-- **Stale requests** (>15s) are rejected.
+- **Stale requests** (>15s, measured on the server-synced clock `game.time.serverTime` so
+  client clock skew cannot expire them) are rejected.
 
 ---
 
@@ -195,8 +198,8 @@ alternative-token-foundry/
 │   ├── constants.mjs              # ids, keys, t() helper
 │   ├── paths.mjs        (pure)    # normalizePath, cacheBustPath
 │   ├── slots.mjs        (pure)    # activeField, resolveActiveSlot, otherSlot, currentArtSrc
-│   ├── authority.mjs    (pure)    # electPrimaryGM
-│   ├── validation.mjs   (pure)    # validateActorConfig, validateSwitchRequest
+│   ├── authority.mjs              # primary GM = game.users.activeGM
+│   ├── validation.mjs   (pure)    # validateActorConfig, validateSwitchRequest, isOwnUnlinkedToken
 │   ├── sync-plan.mjs    (pure)    # buildTokenUpdate/PrototypeUpdate, planSceneUpdates, planRollback
 │   ├── animation.mjs    (pure)    # TokenAnimationTransition list, options bag
 │   ├── tokenizer-bridge.mjs       # optional vtta-tokenizer launch + pure helpers

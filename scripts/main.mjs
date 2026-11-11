@@ -41,7 +41,26 @@ Hooks.on("renderTokenHUD", (hud, element) => {
   }
 });
 
+/**
+ * Foundry does not re-render an open Token HUD when a token's art changes, which
+ * would leave our switch button pointing at the now-showing slot.
+ * @param {(tokenDoc: TokenDocument) => boolean} isAffected
+ */
+function refreshHud(isAffected) {
+  try {
+    const hud = canvas?.tokens?.hud;
+    const tokenDoc = hud?.object?.document;
+    if (hud?.rendered && tokenDoc && isAffected(tokenDoc)) hud.render();
+  } catch (err) {
+    console.error(`${MODULE_ID} |`, err);
+  }
+}
+
 Hooks.on("updateActor", (actor, changed, options, userId) => {
+  // Linked tokens resolve their active slot from the prototype, which is written
+  // *after* the placed tokens: refresh again or the HUD keeps the old target.
+  if (changed && "prototypeToken" in changed) refreshHud((td) => td.actorId === actor.id);
+
   if (options?.[INTERNAL_OPTION]) return;
 
   // GM side: a player wrote a request flag.
@@ -54,15 +73,8 @@ Hooks.on("updateActor", (actor, changed, options, userId) => {
 });
 
 Hooks.on("updateToken", (tokenDoc, changed) => {
-  // Foundry does not re-render an open Token HUD when a token's art changes,
-  // which would leave our switch button pointing at the now-showing slot.
   if (!changed || (!("texture" in changed) && !("ring" in changed))) return;
-  try {
-    const hud = canvas?.tokens?.hud;
-    if (hud?.rendered && hud.object?.document?.uuid === tokenDoc.uuid) hud.render();
-  } catch (err) {
-    console.error(`${MODULE_ID} |`, err);
-  }
+  refreshHud((td) => td.uuid === tokenDoc.uuid);
 });
 
 Hooks.on("createToken", (tokenDoc, options) => {

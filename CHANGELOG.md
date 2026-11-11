@@ -6,6 +6,25 @@ All notable changes to this project are documented here. The format is loosely b
 
 ## [Unreleased]
 
+### Security
+- A switch request could name **any** unlinked token through its `tokenUuid`, so a player
+  owning one configured character could have the GM client repaint another actor's unlinked
+  token with one of their own two images. The uuid is now only honored for an unlinked token
+  of the actor the request was made on.
+
+### Fixed
+- Requests no longer expire (or never expire) when the player's and the GM's computer clocks
+  disagree: request age is measured on Foundry's server-synced clock.
+- With several GMs connected, the processing GM is now Foundry's own `game.users.activeGM`
+  instead of a locale-dependent id sort that two clients could resolve differently.
+- A player's HUD button kept its old "Switch to …" tooltip after switching a linked token;
+  the HUD now also refreshes when the prototype token changes.
+- Picking an image after the config window re-rendered no longer drops the chosen path.
+
+### Changed
+- Releases run the test suite before publishing. Dev tooling updated (vitest 5).
+- README documents the whole public API.
+
 ## [0.0.6] — 2026-08-18
 
 ### Fixed
