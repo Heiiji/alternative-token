@@ -61,13 +61,17 @@ export async function synchronizeAppearance(actor, config, slot) {
 }
 
 async function rollbackAppearance(actor, snapshot, artMode) {
-  try {
-    for (const [sceneId, updates] of planRollback(snapshot.tokens, artMode)) {
+  for (const [sceneId, updates] of planRollback(snapshot.tokens, artMode)) {
+    try {
       const scene = game.scenes.get(sceneId);
       if (scene && updates.length) {
         await scene.updateEmbeddedDocuments("Token", updates, appearanceUpdateOptions({ animate: false }));
       }
+    } catch (err) {
+      error("rollback failed", err);
     }
+  }
+  try {
     if (snapshot.prototypeSrc != null) {
       await actor.update(buildPrototypeUpdate(artMode, snapshot.prototypeSrc), { [INTERNAL_OPTION]: true });
     }
@@ -97,7 +101,8 @@ export async function switchSingleToken(tokenDoc, config, slot) {
     await tokenDoc.update({ [field]: src }, appearanceUpdateOptions());
   } catch (err) {
     if (previous != null) {
-      await tokenDoc.update({ [field]: previous }, appearanceUpdateOptions({ animate: false })).catch(() => {});
+      await tokenDoc.update({ [field]: previous }, appearanceUpdateOptions({ animate: false }))
+        .catch((rollbackError) => error("rollback failed", rollbackError));
     }
     throw err;
   }

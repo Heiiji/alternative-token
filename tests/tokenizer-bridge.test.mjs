@@ -103,9 +103,10 @@ describe("parseTokenizerResponse", () => {
     avatarFilename: "uploads/cerbere.Avatar.atf.abc.a.webp",
   };
 
-  it("persists the cleaned token path and ignores the avatar", () => {
-    const parsed = parseTokenizerResponse({ ...base, tokenFilename: "uploads/cerbere.Token.atf.abc.a.webp?99" });
-    expect(parsed).toEqual({ ok: true, src: "uploads/cerbere.Token.atf.abc.a.webp", actorId: "abc", slot: "a" });
+  it("preserves the token URL's encoding and parameters and ignores the avatar", () => {
+    const src = "https://images.test/cerbere%23.Token.atf.abc.a.webp?signature=a%2Bb#view";
+    const parsed = parseTokenizerResponse({ ...base, tokenFilename: src });
+    expect(parsed).toEqual({ ok: true, src, actorId: "abc", slot: "a" });
   });
 
   it("rejects a no-op Apply", () => {

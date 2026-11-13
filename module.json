@@ -19,7 +19,7 @@
     { "lang": "en", "name": "English", "path": "lang/en.json" },
     { "lang": "fr", "name": "Français", "path": "lang/fr.json" }
   ],
-  "license": "MIT",
+  "license": "LICENSE",
   "readme": "https://github.com/Heiiji/alternative-token/blob/main/README.md",
   "changelog": "https://github.com/Heiiji/alternative-token/blob/main/CHANGELOG.md",
   "bugs": "https://github.com/Heiiji/alternative-token/issues",

@@ -24,7 +24,7 @@ describe("otherSlot", () => {
 describe("resolveActiveSlot", () => {
   it("resolves slot a and b, ignoring cache-busting query strings", () => {
     expect(resolveActiveSlot("tokens/normal.webp", config)).toBe("a");
-    expect(resolveActiveSlot("tokens/armored.webp?v=9", config)).toBe("b");
+    expect(resolveActiveSlot("tokens/armored.webp?9", config)).toBe("b");
   });
 
   it("returns null when the image matches neither slot (out of sync)", () => {

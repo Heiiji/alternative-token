@@ -93,8 +93,10 @@ activeField(artMode) = artMode === "ring-subject" ? "ring.subject.texture" : "te
 ```
 
 `resolveActiveSlot` compares the prototype's current value against slot A/B using
-**normalized paths** (decode URI, strip query string/hash, trim slashes) — raw `===` is
-fragile because Foundry can rewrite paths. If it matches neither slot, the actor is
+**normalized paths** (decode URI while preserving reserved characters, ignore ATF's numeric
+cache query, trim slashes) — raw `===` is fragile because Foundry can rewrite paths.
+Other query parameters and fragments remain significant. Stored paths retain their original
+encoding and parameters. If it matches neither slot, the actor is
 **out-of-sync** (handled gracefully, never crashes).
 
 ---
@@ -335,10 +337,11 @@ and only updates the current scene). Options omit `actor` and `token`. `nameSuff
 call the callback. Tokenizer's singleton window (`tokenizer-control`) is not force-replaced
 if already open.
 
-**Callback.** Persist `normalizePath(tokenFilename)` into that slot of the GM-only world
+**Callback.** Persist the trimmed `tokenFilename` into that slot of the GM-only world
 setting. Ignore `avatarFilename`. If the tokenized slot is already the showing appearance,
-run `synchronizeAppearance` with a cache-bust query on the **document write only** (config
-stores the clean path). Hidden slot and out-of-sync: config only — do not surprise-switch.
+run `synchronizeAppearance` with a cache-bust query on the **document write only**. Existing
+URL parameters are preserved without cache-busting, so signed URLs remain valid.
+Hidden slot and out-of-sync: config only — do not surprise-switch.
 Players still only write `"a"` / `"b"`.
 
 **Sheet Tokenizer.** Native Tokenizer entry points are not intercepted (no save hook). The
@@ -348,7 +351,8 @@ dialog: assign the current art to A or B without changing what the token shows.
 **Ring-subject.** ATF does not pass `forceDynamicRing`. GMs use Tokenizer's Apply Dynamic
 preset; a baked circular frame double-frames under Foundry rings.
 
-**Hygiene.** Slot `src` is stored normalized. `imagesMustDiffer` uses `samePath`. *Use
+**Hygiene.** Slot `src` is stored trimmed, retaining URL encoding and parameters.
+`imagesMustDiffer` uses `samePath`. *Use
 current as A* reads `activeField(artMode)`. Fresh configs infer `ring-subject` from
 `prototypeToken.ring.enabled` without overwriting a saved mode. No `schemaVersion` bump.
 

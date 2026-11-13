@@ -74,7 +74,7 @@
   "ATF.errors.invalidTarget": "Invalid appearance requested.",
   "ATF.errors.expired": "The switch request expired. Please try again.",
   "ATF.errors.noImage": "The selected appearance has no image.",
-  "ATF.errors.syncFailed": "Could not switch appearance. The previous artwork was restored.",
+  "ATF.errors.syncFailed": "Could not switch appearance. Check the token artwork; restoration may be incomplete.",
   "ATF.errors.switchFailed": "Could not switch appearance.",
   "ATF.errors.tokenizerUnavailable": "Tokenizer is not available.",
   "ATF.errors.tokenizerOpen": "Tokenizer is already open. Finish or close it first."

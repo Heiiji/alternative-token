@@ -52,7 +52,7 @@ export function shouldSyncAfterTokenize(activeSlot, tokenizedSlot, outOfSync) {
  */
 export function tokenBasenameHasAtfSuffix(tokenFilename, actorId, slot) {
   const path = normalizePath(tokenFilename);
-  const base = path.split("/").pop() ?? "";
+  const base = path.split(/[?#]/)[0].split("/").pop() ?? "";
   const suffix = atfNameSuffix(actorId, slot);
   return suffix.length > 0 && base.includes(suffix);
 }
@@ -120,7 +120,7 @@ export function parseTokenizerResponse(response) {
   if (tokenizerResultIsNoop(response.tokenFilename, response.atfSeedTokenFilename, actorId, slot)) {
     return { ok: false, reason: "ATF.notify.tokenizerNoop" };
   }
-  const src = normalizePath(response.tokenFilename);
+  const src = response.tokenFilename.trim();
   if (!src) return { ok: false, reason: "ATF.notify.tokenizerNoop" };
   if (samePath(src, response.atfOtherSlotSrc)) {
     return { ok: false, reason: "ATF.errors.imagesMustDiffer" };

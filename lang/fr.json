@@ -74,7 +74,7 @@
   "ATF.errors.invalidTarget": "Apparence demandée invalide.",
   "ATF.errors.expired": "La demande de basculement a expiré. Veuillez réessayer.",
   "ATF.errors.noImage": "L'apparence sélectionnée n'a pas d'image.",
-  "ATF.errors.syncFailed": "Impossible de changer d'apparence. L'image précédente a été restaurée.",
+  "ATF.errors.syncFailed": "Impossible de changer d'apparence. Vérifiez les images des jetons ; la restauration peut être incomplète.",
   "ATF.errors.switchFailed": "Impossible de changer d'apparence.",
   "ATF.errors.tokenizerUnavailable": "Tokenizer n'est pas disponible.",
   "ATF.errors.tokenizerOpen": "Tokenizer est déjà ouvert. Terminez ou fermez-le d'abord."

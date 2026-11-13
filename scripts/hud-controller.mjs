@@ -9,7 +9,7 @@ import { t, error, withErrorDetail } from "./constants.mjs";
 import { getActorConfig, setActorConfig } from "./config-repository.mjs";
 import { getPrimaryActiveGMId } from "./authority.mjs";
 import { currentArtSrc, otherSlot, resolveActiveSlot } from "./slots.mjs";
-import { normalizePath, samePath } from "./paths.mjs";
+import { samePath } from "./paths.mjs";
 import { requestAppearanceChange } from "./request-service.mjs";
 import { promptAdoptSlot, promptSlotChoice } from "./dialog.mjs";
 import { AtfConfigApp } from "./config-app.mjs";
@@ -128,7 +128,7 @@ function buildButton(config, active, target) {
  */
 async function adoptCurrentAppearance(actor, tokenDoc, config, slot) {
   const artSource = tokenDoc.isLinked ? actor.prototypeToken : tokenDoc;
-  const src = normalizePath(currentArtSrc(artSource, config.artMode));
+  const src = currentArtSrc(artSource, config.artMode).trim();
   if (!src) {
     ui.notifications?.warn(t("ATF.errors.noImage"));
     return false;

@@ -9,7 +9,7 @@
 import { ART_MODES, MODULE_ID, t, error, withErrorDetail } from "./constants.mjs";
 import { getActorConfig, getConfig, removeActorConfig, setActorConfig, setConfig } from "./config-repository.mjs";
 import { validateActorConfig } from "./validation.mjs";
-import { cacheBustPath, normalizePath, samePath } from "./paths.mjs";
+import { cacheBustPath, samePath } from "./paths.mjs";
 import { currentArtSrc, inferArtMode, otherSlot, resolveActiveSlot } from "./slots.mjs";
 import { synchronizeAppearance } from "./sync-service.mjs";
 import { enqueue } from "./request-service.mjs";
@@ -30,7 +30,7 @@ function eligibleActors() {
 /** Seed config for an actor never configured before: prefill A with its current art. */
 function defaultActorConfig(actor, { enabledByDefault = false } = {}) {
   const artMode = inferArtMode(actor.prototypeToken);
-  const src = normalizePath(currentArtSrc(actor.prototypeToken, artMode) || actor.img || "");
+  const src = (currentArtSrc(actor.prototypeToken, artMode) || actor.img || "").trim();
   return {
     enabled: enabledByDefault,
     artMode,
@@ -188,7 +188,7 @@ export class AtfConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
       type: "image",
       current: this.#readRow(actorId)[slot].src,
       // Fields are looked up at callback time: the form may re-render while the picker is open.
-      callback: (path) => this.#writeSlotSrc(actorId, slot, normalizePath(path)),
+      callback: (path) => this.#writeSlotSrc(actorId, slot, path.trim()),
     }).render(true);
   }
 
@@ -197,7 +197,7 @@ export class AtfConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const actor = game.actors.get(actorId);
     if (!actor) return;
     const { artMode } = this.#readRow(actorId);
-    this.#writeSlotSrc(actorId, "a", normalizePath(currentArtSrc(actor.prototypeToken, artMode) || actor.img || ""));
+    this.#writeSlotSrc(actorId, "a", (currentArtSrc(actor.prototypeToken, artMode) || actor.img || "").trim());
   }
 
   static async #onApplySlot(_event, target) {
@@ -306,7 +306,7 @@ function normalizeRow(row) {
   return {
     enabled: !!row.enabled,
     artMode: row.artMode === ART_MODES.RING ? ART_MODES.RING : ART_MODES.STANDARD,
-    a: { label: (row.a?.label ?? "").trim(), src: normalizePath(row.a?.src ?? "") },
-    b: { label: (row.b?.label ?? "").trim(), src: normalizePath(row.b?.src ?? "") },
+    a: { label: (row.a?.label ?? "").trim(), src: (row.a?.src ?? "").trim() },
+    b: { label: (row.b?.label ?? "").trim(), src: (row.b?.src ?? "").trim() },
   };
 }

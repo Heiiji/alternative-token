@@ -6,6 +6,13 @@ All notable changes to this project are documented here. The format is loosely b
 
 ## [Unreleased]
 
+### Fixed
+- A failed rollback on one scene no longer prevents restoring other scenes and the prototype.
+  Failure notifications no longer claim the previous artwork was necessarily restored.
+- Image selection, saving, adoption and Tokenizer preserve URL encoding and query parameters.
+  Comparison only ignores the module's numeric cache query; cache-busting leaves signed URLs intact.
+- The manifest's `license` field now points to the included `LICENSE` file.
+
 ## [0.1.1] — 2026-11-11
 
 ### Changed
