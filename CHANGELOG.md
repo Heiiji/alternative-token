@@ -6,6 +6,8 @@ All notable changes to this project are documented here. The format is loosely b
 
 ## [Unreleased]
 
+## [0.1.2] — 2026-11-14
+
 ### Fixed
 - A failed rollback on one scene no longer prevents restoring other scenes and the prototype.
   Failure notifications no longer claim the previous artwork was necessarily restored.
@@ -131,7 +133,8 @@ All notable changes to this project are documented here. The format is loosely b
   multi-GM authority election, per-actor request queue, best-effort rollback, standard and
   Dynamic Token Ring art modes, `createToken` reconciliation, and EN + FR localization.
 
-[Unreleased]: https://github.com/Heiiji/alternative-token/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/Heiiji/alternative-token/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/Heiiji/alternative-token/releases/tag/v0.1.2
 [0.1.1]: https://github.com/Heiiji/alternative-token/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Heiiji/alternative-token/releases/tag/v0.1.0
 [0.0.6]: https://github.com/Heiiji/alternative-token/releases/tag/v0.0.6
