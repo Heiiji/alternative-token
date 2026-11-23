@@ -6,6 +6,16 @@ All notable changes to this project are documented here. The format is loosely b
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-11-23
+
+### Added
+- Set an optional token name for each appearance. The name changes with the image on
+  linked tokens and their prototype, or on the selected unlinked token. Blank names keep
+  the current name, so existing configurations continue to work as before.
+
+### Fixed
+- Slot detection and rollback read the saved token image during a texture transition.
+
 ## [0.1.2] — 2026-11-14
 
 ### Fixed
@@ -133,7 +143,8 @@ All notable changes to this project are documented here. The format is loosely b
   multi-GM authority election, per-actor request queue, best-effort rollback, standard and
   Dynamic Token Ring art modes, `createToken` reconciliation, and EN + FR localization.
 
-[Unreleased]: https://github.com/Heiiji/alternative-token/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/Heiiji/alternative-token/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Heiiji/alternative-token/releases/tag/v0.2.0
 [0.1.2]: https://github.com/Heiiji/alternative-token/releases/tag/v0.1.2
 [0.1.1]: https://github.com/Heiiji/alternative-token/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Heiiji/alternative-token/releases/tag/v0.1.0

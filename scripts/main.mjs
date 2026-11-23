@@ -13,6 +13,7 @@ import { isPrimaryActiveGM } from "./authority.mjs";
 import { onRenderTokenHUD } from "./hud-controller.mjs";
 import { reconcileToken, synchronizeAppearance } from "./sync-service.mjs";
 import {
+  enqueue,
   handleRelayedRequest,
   notifyRequester,
   recoverPendingRequests,
@@ -82,8 +83,10 @@ Hooks.on("updateToken", (tokenDoc, changed) => {
 
 Hooks.on("createToken", (tokenDoc, options) => {
   if (options?.[INTERNAL_OPTION]) return;
-  if (!isPrimaryActiveGM()) return;
-  reconcileToken(tokenDoc).catch((err) => console.error(`${MODULE_ID} |`, err));
+  if (!tokenDoc.isLinked || !isPrimaryActiveGM()) return;
+  // A drop during a switch must resolve the slot after the prototype write.
+  enqueue(tokenDoc.actorId, () => reconcileToken(tokenDoc))
+    .catch((err) => console.error(`${MODULE_ID} |`, err));
 });
 
 Hooks.on("deleteActor", (actor) => {

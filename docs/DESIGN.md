@@ -42,13 +42,13 @@ The "no arbitrary image paths" guarantee comes from **where each piece of data l
 
 | Store | Location | Who can write | Contents |
 |---|---|---|---|
-| **Config** | World setting `actorConfigurations` (`config:false`) | **GM only** | per actor: `enabled`, `artMode`, `a{label,src}`, `b{label,src}` |
+| **Config** | World setting `actorConfigurations` (`config:false`) | **GM only** | per actor: `enabled`, `artMode`, slots `a` and `b` with `label`, `src`, and optional `name` |
 | **Request** | Actor flag `flags.<id>.request` | Actor owner (player) | `{id, target:"a"|"b", tokenUuid, requestedAt, requesterId}` — **never a path** |
 | **Result** | Actor flag `flags.<id>.lastResult` | GM (authoritative) | `{requestId, requesterId, success, message, completedAt}` — feedback only; written together with `request: null` |
 
 A player owns their Actor, so they *can* write the request flag — but the only thing it can
-carry is a slot letter (`"a"`/`"b"`). The GM resolves that letter to an actual image from
-GM-only config. Even a hand-edited flag cannot inject a file path. The optional
+select is a slot letter (`"a"`/`"b"`). The GM resolves that letter to the image and optional
+name from the world setting. The optional
 `tokenUuid` it carries is only honored for an unlinked token **of that same actor**, so a
 forged uuid cannot reach another actor's token.
 
@@ -68,12 +68,15 @@ with no dependency and no custom sender verification.
     "<actorId>": {
       "enabled": true,
       "artMode": "standard",            // "standard" | "ring-subject"
-      "a": { "label": "Normal",  "src": "worlds/x/tokens/cerbere-normal.webp" },
-      "b": { "label": "Armored", "src": "worlds/x/tokens/cerbere-armored.webp" }
+      "a": { "label": "Normal",  "src": "worlds/x/tokens/cerbere-normal.webp", "name": "Cerbère" },
+      "b": { "label": "Armored", "src": "worlds/x/tokens/cerbere-armored.webp", "name": "Cerbère blindé" }
     }
   }
 }
 ```
+
+`name` is additive to schema version 1. Omitted and blank names preserve the current
+name of each affected token. The image still identifies the active slot.
 
 ```jsonc
 // Actor flag: request                      // Actor flag: lastResult
@@ -108,7 +111,7 @@ encoding and parameters. If it matches neither slot, the actor is
 2. Foundry fires `updateActor` on all clients with a server-verified `userId`.
 3. The **elected primary GM** validates: user owns actor? config enabled? target ∈ {a,b}?
    not stale (<15s)? image present?
-4. GM looks up the approved image and runs the sync (§6), tagging its own updates so the
+4. GM looks up the approved appearance and runs the sync (§6), tagging its own updates so the
    module's hooks skip them.
 5. GM writes `lastResult`, clears `request`. The requesting client shows a toast.
 
@@ -122,21 +125,20 @@ no round-trip.
 
 ```
 tokens = actor.getDependentTokens({ linked: true })        // all scenes
-snapshot every token's active field + prototype's active field
+snapshot the image fields and any names the switch will update
 try:
   for each scene: scene.updateEmbeddedDocuments("Token", updates, { atfInternal:true })
-  actor.update({ "prototypeToken.<field>": src }, { atfInternal:true })
+  actor.update(prototype token image and optional name, { atfInternal:true })
 catch:
   restore from snapshots (best-effort rollback)
 ```
 
-Only the image field changes — scale, dimensions, vision, tint, bars, disposition, ring
-colors, and all system data are untouched. The Actor **portrait** is never changed.
-Placed-token writes include `animation: { transition }` from the world setting (§15);
-the prototype update does not.
+Each write includes the image and the name when the GM configured one for this slot.
+Placed-token writes use `TokenDocument.name` and include `animation: { transition }` from
+the world setting (§15). The prototype uses `prototypeToken.name` on the world Actor.
 
-`createToken` reconciles: a freshly dropped linked token whose art doesn't match the active
-slot is brought into line.
+`createToken` queues reconciliation with the other writes for this actor. A freshly dropped
+linked token receives the active slot's image and configured name if either differs.
 
 ---
 

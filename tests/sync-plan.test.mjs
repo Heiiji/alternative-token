@@ -3,21 +3,23 @@ import { buildPrototypeUpdate, buildTokenUpdate, planRollback, planSceneUpdates 
 
 describe("buildTokenUpdate", () => {
   it("targets texture.src for standard mode", () => {
-    expect(buildTokenUpdate("t1", "standard", "a.webp")).toEqual({ _id: "t1", "texture.src": "a.webp" });
+    expect(buildTokenUpdate("t1", "standard", { src: "a.webp" })).toEqual({ _id: "t1", "texture.src": "a.webp" });
   });
   it("targets ring.subject.texture for ring mode", () => {
-    expect(buildTokenUpdate("t1", "ring-subject", "a.webp")).toEqual({
+    expect(buildTokenUpdate("t1", "ring-subject", { src: "a.webp", name: "Armored" })).toEqual({
       _id: "t1",
       "ring.subject.texture": "a.webp",
+      name: "Armored",
     });
   });
 });
 
 describe("buildPrototypeUpdate", () => {
   it("prefixes the field with prototypeToken", () => {
-    expect(buildPrototypeUpdate("standard", "a.webp")).toEqual({ "prototypeToken.texture.src": "a.webp" });
-    expect(buildPrototypeUpdate("ring-subject", "a.webp")).toEqual({
+    expect(buildPrototypeUpdate("standard", { src: "a.webp" })).toEqual({ "prototypeToken.texture.src": "a.webp" });
+    expect(buildPrototypeUpdate("ring-subject", { src: "a.webp", name: "Armored" })).toEqual({
       "prototypeToken.ring.subject.texture": "a.webp",
+      "prototypeToken.name": "Armored",
     });
   });
 });
@@ -29,13 +31,13 @@ describe("planSceneUpdates", () => {
       { id: "t2", sceneId: "s1" },
       { id: "t3", sceneId: "s2" },
     ];
-    const plan = planSceneUpdates(tokens, "standard", "new.webp");
+    const plan = planSceneUpdates(tokens, "standard", { src: "new.webp", name: "Armored" });
     expect(plan.get("s1")).toHaveLength(2);
-    expect(plan.get("s2")).toEqual([{ _id: "t3", "texture.src": "new.webp" }]);
+    expect(plan.get("s2")).toEqual([{ _id: "t3", "texture.src": "new.webp", name: "Armored" }]);
   });
 
   it("skips tokens without a scene", () => {
-    const plan = planSceneUpdates([{ id: "t1", sceneId: null }], "standard", "x");
+    const plan = planSceneUpdates([{ id: "t1", sceneId: null }], "standard", { src: "x" });
     expect(plan.size).toBe(0);
   });
 });

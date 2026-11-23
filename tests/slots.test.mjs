@@ -57,4 +57,14 @@ describe("currentArtSrc", () => {
     expect(currentArtSrc(proto, "ring-subject")).toBe("tokens/subject.webp");
     expect(currentArtSrc(null, "standard")).toBe("");
   });
+
+  it("uses the saved artwork while the placed token is still transitioning", () => {
+    const token = {
+      _source: { texture: { src: config.b.src }, ring: { subject: { texture: config.b.src } } },
+      texture: { src: config.a.src },
+      ring: { subject: { texture: config.a.src } },
+    };
+    expect(resolveActiveSlot(currentArtSrc(token, "standard"), config)).toBe("b");
+    expect(resolveActiveSlot(currentArtSrc(token, "ring-subject"), config)).toBe("b");
+  });
 });

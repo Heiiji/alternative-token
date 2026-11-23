@@ -38,11 +38,12 @@ export function inferArtMode(tokenLike, savedArtMode) {
  * @returns {string}
  */
 export function currentArtSrc(tokenLike, artMode) {
-  if (!tokenLike) return "";
+  // The prepared image can still be transitioning after Foundry saves a switch.
+  const source = tokenLike?._source;
   if (artMode === ART_MODES.RING) {
-    return tokenLike.ring?.subject?.texture ?? "";
+    return source?.ring?.subject?.texture ?? tokenLike?.ring?.subject?.texture ?? "";
   }
-  return tokenLike.texture?.src ?? "";
+  return source?.texture?.src ?? tokenLike?.texture?.src ?? "";
 }
 
 /**

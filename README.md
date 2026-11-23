@@ -6,13 +6,13 @@
 
 A small, system-agnostic **Foundry VTT** module (V13+, verified on **V14**) that lets
 **players** switch their character token between **two GM-approved appearances** — for
-example *Normal* and *Armored* — with a single click in the Token HUD.
+example *Normal* and *Armored* — with a single click in the Token HUD. Each appearance can
+set the token's name along with its image.
 
 Switching a **linked** token updates every linked token (across all scenes) and the actor's
 prototype token together, so the appearance belongs to the character and survives reloads.
 Switching an **unlinked** token changes just that placed token, since each unlinked token is
-independent. The GM keeps full control either way: the switch only ever applies one of **the
-two images the GM configured** — a player's request never carries a file path.
+independent. A player's request selects one of the two appearances approved by the GM.
 
 | Normal | One click later |
 |---|---|
@@ -45,6 +45,11 @@ player-owned characters at once. For each, set the two images (with the File Pic
 now* pushes an appearance immediately; **Save changes** when done.
 
 Both images are required, must differ, and both need a label before saving.
+
+Fill in **Token name** for A and B to switch between two names. Leave a
+field blank to keep each token's current name when applying that appearance. Existing
+configurations start with both fields blank. The appearance label still identifies the form
+in the HUD. Name visibility follows Foundry's **Display Name** setting.
 
 **Transition:** in **Configure Settings → Alternative Token**, pick the visual
 effect used when a token switches (default **Fade**). The list is Foundry's built-in
@@ -83,12 +88,12 @@ slot. The character portrait is never changed.
 
 ## How it works (short version)
 
-Approved images live in a **GM-only world setting**. A player click writes a tiny, path-free
-**request flag** (`"a"`/`"b"`) to their owned actor; Foundry delivers it to the elected GM
-with a server-verified user id; the GM validates ownership and applies the GM-approved image
-to all linked tokens + the prototype, with best-effort rollback on failure. Multiple
-connected GMs share a single authority (Foundry's `game.users.activeGM`), and rapid clicks are
-serialized per actor. No socket, no dependencies. Full design in [`docs/DESIGN.md`](docs/DESIGN.md).
+Only GMs can edit the world setting that stores approved images and optional names. A player
+click writes a **request flag** (`"a"`/`"b"`) to their owned actor. Foundry delivers it to the
+elected GM with a server-verified user id. The GM checks ownership and applies the appearance
+with best-effort rollback on failure. Renames apply to token documents. The actor retains its
+sheet name and portrait. Foundry's `game.users.activeGM` identifies the processing GM, who
+handles requests one at a time per actor. See [`docs/DESIGN.md`](docs/DESIGN.md).
 
 Foundry's own permissions still apply: a player allowed to edit their token with core tools can
 change its art outside ATF. ATF does not block that; the HUD button then shows an out-of-sync
@@ -105,7 +110,8 @@ const api = game.modules.get("alternative-token")?.api;
 // validation as the HUD button. Pass a token uuid to switch one unlinked token only.
 await api.requestAppearanceChange(actor, "b", tokenUuid);
 
-// Read an actor's configuration: { enabled, artMode, a: { label, src }, b: { label, src } } or null.
+// Read an actor's configuration: { enabled, artMode, a: { label, src, name }, b: { label, src, name } } or null.
+// Older configurations may omit name.
 api.getActorConfig(actor.id);
 
 // GM only, low-level: apply a slot of a config to all linked tokens + the prototype,
@@ -131,15 +137,16 @@ publishes a Release whose assets back the manifest/download URLs above.
 
 Module **Foundry VTT** (V13+, vérifié en **V14**) permettant aux **joueurs** de basculer le
 jeton de leur personnage entre **deux apparences approuvées par le MJ** (par ex. *Normal* /
-*Armuré*) en un clic depuis le Token HUD. L'apparence appartient au **personnage** : tous les
-jetons liés (sur toutes les scènes) et le jeton prototype sont mis à jour ensemble, et le
-choix persiste après un rechargement. Les joueurs ne peuvent basculer qu'entre les **deux
-images définies par le MJ**, jamais vers un fichier arbitraire.
+*Armuré*) en un clic depuis le HUD. Le changement s'applique à tous les jetons liés et au
+prototype, ou au seul jeton sélectionné si celui-ci est non lié. Le choix persiste après un
+rechargement.
 
 - **Installation** : Modules → Installer un module, coller l'URL de manifeste ci-dessus.
-- **MJ** : *Configurer les paramètres → Images de jeton alternatives* (réservé au MJ). Sous
-  *Alternative Token*, choisir la **transition d'apparence** (fondu par défaut).
-  Si **Tokenizer** est actif, chaque emplacement a un bouton **Tokeniser…**.
+- **MJ** : ouvrir le crayon du HUD ou *Configurer les paramètres → Images de jeton
+  alternatives*. Renseigner le **Nom du jeton** dans A et B pour basculer entre deux noms.
+  Un champ vide conserve le nom en cours. La visibilité du nom suit le réglage du jeton
+  dans Foundry. Sous *Alternative Token*, choisir la **transition d'apparence** (fondu par
+  défaut). Si **Tokenizer** est actif, chaque emplacement a un bouton **Tokeniser…**.
 - **Joueur** : clic droit sur le jeton → bouton masques du HUD.
 
 ## License

@@ -1,16 +1,28 @@
 /**
  * Applies an appearance to every linked token (across all scenes) and the actor's
- * prototype token, with best-effort rollback. Only the image field is touched —
- * scale, dimensions, vision, tint, bars, ring colors and all system data are left
- * exactly as they are, and the Actor sheet portrait is never changed.
+ * prototype token, with best-effort rollback of artwork and any configured name.
  */
 
 import { appearanceUpdateOptions } from "./animation.mjs";
 import { INTERNAL_OPTION, error } from "./constants.mjs";
 import { getActorConfig } from "./config-repository.mjs";
-import { activeField, resolveActiveSlot } from "./slots.mjs";
+import { activeField, currentArtSrc, resolveActiveSlot } from "./slots.mjs";
 import { samePath } from "./paths.mjs";
-import { buildPrototypeUpdate, planRollback, planSceneUpdates } from "./sync-plan.mjs";
+import { buildAppearanceUpdate, buildPrototypeUpdate, planRollback, planSceneUpdates } from "./sync-plan.mjs";
+
+function configuredAppearance(config, slot) {
+  const { src, name } = config[slot] ?? {};
+  if (!src) throw new Error(`target slot "${slot}" has no image`);
+  return { src, name: typeof name === "string" ? name.trim() || undefined : undefined };
+}
+
+function snapshotAppearance(token, field, rename) {
+  const source = token._source ?? token;
+  return {
+    src: foundry.utils.getProperty(source, field),
+    name: rename ? source.name : undefined,
+  };
+}
 
 /**
  * Switch an actor to the given slot everywhere.
@@ -21,8 +33,8 @@ import { buildPrototypeUpdate, planRollback, planSceneUpdates } from "./sync-pla
 export async function synchronizeAppearance(actor, config, slot) {
   const artMode = config.artMode;
   const field = activeField(artMode);
-  const src = config[slot]?.src;
-  if (!src) throw new Error(`${actor?.name}: target slot "${slot}" has no image`);
+  const appearance = configuredAppearance(config, slot);
+  const rename = appearance.name !== undefined;
 
   // Keep only tokens that still exist in their scene: a stale dependent-token
   // entry (deleted token) would make the whole batch update reject.
@@ -32,18 +44,18 @@ export async function synchronizeAppearance(actor, config, slot) {
 
   // Snapshot current values for rollback.
   const snapshot = {
-    prototypeSrc: foundry.utils.getProperty(actor.prototypeToken, field),
+    prototype: snapshotAppearance(actor.prototypeToken, field, rename),
     tokens: tokenDocs.map((td) => ({
       id: td.id,
       sceneId: td.parent.id,
-      src: foundry.utils.getProperty(td, field),
+      ...snapshotAppearance(td, field, rename),
     })),
   };
 
   const sceneUpdates = planSceneUpdates(
     tokenDocs.map((td) => ({ id: td.id, sceneId: td.parent.id })),
     artMode,
-    src,
+    appearance,
   );
 
   try {
@@ -53,7 +65,7 @@ export async function synchronizeAppearance(actor, config, slot) {
         await scene.updateEmbeddedDocuments("Token", updates, appearanceUpdateOptions());
       }
     }
-    await actor.update(buildPrototypeUpdate(artMode, src), { [INTERNAL_OPTION]: true });
+    await actor.update(buildPrototypeUpdate(artMode, appearance), { [INTERNAL_OPTION]: true });
   } catch (err) {
     await rollbackAppearance(actor, snapshot, artMode);
     throw err;
@@ -72,9 +84,8 @@ async function rollbackAppearance(actor, snapshot, artMode) {
     }
   }
   try {
-    if (snapshot.prototypeSrc != null) {
-      await actor.update(buildPrototypeUpdate(artMode, snapshot.prototypeSrc), { [INTERNAL_OPTION]: true });
-    }
+    const update = buildPrototypeUpdate(artMode, snapshot.prototype);
+    if (Object.keys(update).length) await actor.update(update, { [INTERNAL_OPTION]: true });
   } catch (err) {
     error("rollback failed", err);
   }
@@ -89,19 +100,19 @@ async function rollbackAppearance(actor, snapshot, artMode) {
  * @param {"a"|"b"} slot
  */
 export async function switchSingleToken(tokenDoc, config, slot) {
-  const field = activeField(config.artMode);
-  const src = config[slot]?.src;
-  if (!src) throw new Error(`target slot "${slot}" has no image`);
+  const { artMode } = config;
+  const appearance = configuredAppearance(config, slot);
   if (tokenDoc?.parent && !(tokenDoc.parent.tokens?.has(tokenDoc.id) ?? true)) {
     throw new Error(`token "${tokenDoc.name ?? tokenDoc.id}" no longer exists on its scene`);
   }
 
-  const previous = foundry.utils.getProperty(tokenDoc, field);
+  const previous = snapshotAppearance(tokenDoc, activeField(artMode), appearance.name !== undefined);
   try {
-    await tokenDoc.update({ [field]: src }, appearanceUpdateOptions());
+    await tokenDoc.update(buildAppearanceUpdate(artMode, appearance), appearanceUpdateOptions());
   } catch (err) {
-    if (previous != null) {
-      await tokenDoc.update({ [field]: previous }, appearanceUpdateOptions({ animate: false }))
+    const update = buildAppearanceUpdate(artMode, previous);
+    if (Object.keys(update).length) {
+      await tokenDoc.update(update, appearanceUpdateOptions({ animate: false }))
         .catch((rollbackError) => error("rollback failed", rollbackError));
     }
     throw err;
@@ -121,14 +132,15 @@ export async function reconcileToken(tokenDoc) {
   const config = getActorConfig(actor.id);
   if (!config?.enabled || !config.a?.src || !config.b?.src) return;
 
-  const field = activeField(config.artMode);
-  const activeSrc = foundry.utils.getProperty(actor.prototypeToken, field);
+  const activeSrc = currentArtSrc(actor.prototypeToken, config.artMode);
   const slot = resolveActiveSlot(activeSrc, config);
   if (!slot) return; // out of sync — don't guess
 
-  const desired = config[slot].src;
-  const current = foundry.utils.getProperty(tokenDoc, field);
-  if (samePath(current, desired)) return;
+  const { src, name } = configuredAppearance(config, slot);
+  const update = buildAppearanceUpdate(config.artMode, {
+    src: samePath(currentArtSrc(tokenDoc, config.artMode), src) ? undefined : src,
+    name: tokenDoc.name === name ? undefined : name,
+  });
 
-  await tokenDoc.update({ [field]: desired }, appearanceUpdateOptions({ animate: false }));
+  if (Object.keys(update).length) await tokenDoc.update(update, appearanceUpdateOptions({ animate: false }));
 }

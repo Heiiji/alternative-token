@@ -1,7 +1,7 @@
 /**
  * Read/write access to the GM-only configuration (a hidden world setting).
  * Players can read it (they need labels for the button) but cannot write it,
- * which is what keeps approved image paths under GM control.
+ * which keeps approved image paths and token names under GM control.
  */
 
 import { DEFAULT_CONFIG, MODULE_ID, SCHEMA_VERSION, SETTINGS } from "./constants.mjs";

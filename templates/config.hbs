@@ -23,7 +23,13 @@
           <div class="atf-slot-title">{{localize "ATF.config.imageA"}}</div>
           <img class="atf-preview" data-preview="{{actor.id}}.a" src="{{actor.a.src}}" alt="" />
           <input type="text" class="atf-label" name="actors.{{actor.id}}.a.label"
-                 value="{{actor.a.label}}" placeholder="{{localize 'ATF.config.labelPlaceholder'}}" />
+                 value="{{actor.a.label}}" aria-label="{{localize 'ATF.config.appearanceLabel'}}"
+                 placeholder="{{localize 'ATF.config.labelPlaceholder'}}" />
+          <label>
+            {{localize "ATF.config.tokenName"}}
+            <input type="text" name="actors.{{actor.id}}.a.name" value="{{actor.a.name}}"
+                   placeholder="{{localize 'ATF.config.tokenNamePlaceholder'}}" />
+          </label>
           <div class="atf-path-row">
             <input type="text" class="atf-path" name="actors.{{actor.id}}.a.src"
                    value="{{actor.a.src}}" placeholder="{{localize 'ATF.config.pathPlaceholder'}}" />
@@ -49,7 +55,13 @@
           <div class="atf-slot-title">{{localize "ATF.config.imageB"}}</div>
           <img class="atf-preview" data-preview="{{actor.id}}.b" src="{{actor.b.src}}" alt="" />
           <input type="text" class="atf-label" name="actors.{{actor.id}}.b.label"
-                 value="{{actor.b.label}}" placeholder="{{localize 'ATF.config.labelPlaceholder'}}" />
+                 value="{{actor.b.label}}" aria-label="{{localize 'ATF.config.appearanceLabel'}}"
+                 placeholder="{{localize 'ATF.config.labelPlaceholder'}}" />
+          <label>
+            {{localize "ATF.config.tokenName"}}
+            <input type="text" name="actors.{{actor.id}}.b.name" value="{{actor.b.name}}"
+                   placeholder="{{localize 'ATF.config.tokenNamePlaceholder'}}" />
+          </label>
           <div class="atf-path-row">
             <input type="text" class="atf-path" name="actors.{{actor.id}}.b.src"
                    value="{{actor.b.src}}" placeholder="{{localize 'ATF.config.pathPlaceholder'}}" />

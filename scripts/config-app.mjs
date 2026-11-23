@@ -1,5 +1,5 @@
 /**
- * GM configuration screen: pick two approved images + labels per player-owned
+ * GM configuration screen: pick two approved appearances per player-owned
  * actor, choose art mode, enable/disable, and apply an appearance immediately.
  *
  * Built on ApplicationV2 + HandlebarsApplicationMixin (V14; FormApplication is
@@ -50,8 +50,8 @@ function buildActorCard(actor, cfg, artModes, { enabledByDefault = false } = {})
     img: actor.img,
     enabled: !!ac.enabled,
     artMode,
-    a: { label: ac.a?.label ?? "", src: ac.a?.src ?? "" },
-    b: { label: ac.b?.label ?? "", src: ac.b?.src ?? "" },
+    a: normalizeSlot(ac.a),
+    b: normalizeSlot(ac.b),
     artModes: artModes.map((m) => ({ ...m, selected: m.value === artMode })),
   };
 }
@@ -134,11 +134,16 @@ export class AtfConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
   #readRow(actorId) {
     const root = this.element;
     const q = (suffix) => root?.querySelector(`[name="actors.${actorId}.${suffix}"]`);
+    const readSlot = (slot) => normalizeSlot({
+      label: q(`${slot}.label`)?.value,
+      src: q(`${slot}.src`)?.value,
+      name: q(`${slot}.name`)?.value,
+    });
     return {
       enabled: !!q("enabled")?.checked,
       artMode: q("artMode")?.value ?? ART_MODES.STANDARD,
-      a: { label: q("a.label")?.value?.trim() ?? "", src: q("a.src")?.value?.trim() ?? "" },
-      b: { label: q("b.label")?.value?.trim() ?? "", src: q("b.src")?.value?.trim() ?? "" },
+      a: readSlot("a"),
+      b: readSlot("b"),
     };
   }
 
@@ -169,9 +174,10 @@ export class AtfConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const cfg = foundry.utils.deepClone(getConfig());
     cfg.actors ??= {};
-    for (const [id, row] of Object.entries(rows)) {
-      const hasData = row.enabled || row.a?.src || row.b?.src || row.a?.label || row.b?.label;
-      if (hasData) cfg.actors[id] = normalizeRow(row);
+    for (const [id, fields] of Object.entries(rows)) {
+      const row = normalizeRow(fields);
+      const hasData = row.enabled || Object.values(row.a).some(Boolean) || Object.values(row.b).some(Boolean);
+      if (hasData) cfg.actors[id] = row;
       else delete cfg.actors[id];
     }
     await setConfig(cfg);
@@ -306,7 +312,15 @@ function normalizeRow(row) {
   return {
     enabled: !!row.enabled,
     artMode: row.artMode === ART_MODES.RING ? ART_MODES.RING : ART_MODES.STANDARD,
-    a: { label: (row.a?.label ?? "").trim(), src: (row.a?.src ?? "").trim() },
-    b: { label: (row.b?.label ?? "").trim(), src: (row.b?.src ?? "").trim() },
+    a: normalizeSlot(row.a),
+    b: normalizeSlot(row.b),
+  };
+}
+
+function normalizeSlot(slot) {
+  return {
+    label: (slot?.label ?? "").trim(),
+    src: (slot?.src ?? "").trim(),
+    name: (slot?.name ?? "").trim(),
   };
 }

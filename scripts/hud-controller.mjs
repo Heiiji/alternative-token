@@ -136,7 +136,7 @@ async function adoptCurrentAppearance(actor, tokenDoc, config, slot) {
 
   const next = {
     ...config,
-    [slot]: { label: config[slot]?.label ?? "", src },
+    [slot]: { ...config[slot], src },
   };
   if (samePath(next.a?.src, next.b?.src)) {
     ui.notifications?.error(t("ATF.errors.imagesMustDiffer"));
